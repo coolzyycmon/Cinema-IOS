@@ -1,0 +1,48 @@
+
+name: Build Cinema
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+
+    steps:
+      - name: Get source
+        uses: actions/checkout@v4
+
+      - name: Compile Cinema
+        run: |
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+
+          xcrun --sdk iphoneos clang \
+            -target arm64-apple-ios15.0 \
+            -isysroot "$SDK" \
+            -dynamiclib \
+            -fobjc-arc \
+            -fmodules \
+            -O2 \
+            CinemaMusic.m \
+            -framework Foundation \
+            -framework UIKit \
+            -framework AVFoundation \
+            -framework MediaPlayer \
+            -framework MediaToolbox \
+            -framework CoreMedia \
+            -framework AudioToolbox \
+            -framework Accelerate \
+            -framework QuartzCore \
+            -o Cinema.dylib \
+            -install_name @rpath/Cinema.dylib
+
+          file Cinema.dylib
+
+      - name: Upload library
+        uses: actions/upload-artifact@v4
+        with:
+          name: Cinema-dylib
+          path: Cinema.dylib
